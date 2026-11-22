@@ -59,7 +59,9 @@ public final class MetricsServer {
                     if (etiquetas.length() > 0) {
                         etiquetas.append(',');
                     }
-                    etiquetas.append(clave).append("=\"")
+                    // Prometheus exige nombres de etiqueta [a-zA-Z_][a-zA-Z0-9_]*;
+                    // Kafka usa claves como "client-id", que deben sanitizarse.
+                    etiquetas.append(sanitizar(clave)).append("=\"")
                             .append(valor.replace("\\", "\\\\").replace("\"", "\\\""))
                             .append('"');
                 });
@@ -75,6 +77,9 @@ public final class MetricsServer {
 
     private static String sanitizar(String nombre) {
         String limpio = nombre.replaceAll("[^a-zA-Z0-9_]", "_");
-        return limpio.isEmpty() ? "metric" : limpio;
+        if (limpio.isEmpty()) {
+            return "metric";
+        }
+        return Character.isDigit(limpio.charAt(0)) ? "_" + limpio : limpio;
     }
 }

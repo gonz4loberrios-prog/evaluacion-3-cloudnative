@@ -1,6 +1,6 @@
 # Guía de capturas para la presentación
 
-Esta guía te lleva paso a paso para sacar pantallazos reales del laboratorio. El estado actual del stack ya tiene datos generados con base `2026-01-08T10:00:00Z` (`1767866400000`) y métricas no cero.
+Esta guía te lleva paso a paso para sacar pantallazos reales del laboratorio. El estado actual del stack ya tiene datos generados con base `2026-01-10T10:00:00Z` (`1768039200000`) y métricas no cero.
 
 **Antes de empezar:** abre PowerShell en `C:\Users\gonza\OneDrive\Desktop\wwww` y maximiza la ventana. Usa el mismo orden de pasos; así las capturas cuentan una historia continua.
 
@@ -16,7 +16,7 @@ Esta guía te lleva paso a paso para sacar pantallazos reales del laboratorio. E
 | 1 | Repo y commit | `git status` + `git log --oneline -1` | `main`, commit `40d0b90`, árbol limpio |
 | 2 | Arquitectura | `README.md` o `docs/ARQUITECTURA.md` | Flujo productor → Streams → salidas + DLQ |
 | 3 | Tópicos e ISR | `docker compose exec -T kafka-1 kafka-topics ... --describe` | 4 particiones, RF=2, `Isr: 1,2` |
-| 4 | Generación | `.\scripts\generate.ps1 -Scenario all -BaseTime 2026-01-08T10:00:00Z` | Entrada real con errores y duplicado |
+| 4 | Generación | `.\scripts\generate.ps1 -Scenario all -BaseTime 2026-01-10T10:00:00Z` | Entrada real con errores y duplicado |
 | 5 | Métricas | `http://localhost:18081/metrics` | `26 / 3 / 1 / 1 / 21` |
 | 6 | Agregados | `.\scripts\consume.ps1 -Topic ventas-agregadas` | `tienda-1` con `4630.5` y `1543.5` |
 | 7 | DLQ | `.\scripts\consume.ps1 -Topic ventas-raw-dlq` | 5 categorías de rechazo |
@@ -89,15 +89,15 @@ Topic: ventas-raw	PartitionCount: 4	ReplicationFactor: 2	Configs: min.insync.rep
 El estado actual ya tiene los datos. Si quieres ver la generación en vivo, ejecuta:
 
 ```powershell
-.\scripts\generate.ps1 -Scenario all -BaseTime 2026-01-08T10:00:00Z
+.\scripts\generate.ps1 -Scenario all -BaseTime 2026-01-10T10:00:00Z
 ```
 
-> **Importante:** si repites la generación, usa una base de tiempo **más de 24 h posterior** a la última usada (por ejemplo, `2026-01-10T10:00:00Z`). La dedup usa `<= 24 h`, así que una base exactamente 24 h después se cuenta como duplicado. Otra opción es reiniciar `streams-app` para limpiar los contadores.
+> **Importante:** si repites la generación, usa una base de tiempo **más de 24 h posterior** a la última usada (por ejemplo, `2026-01-12T10:00:00Z`). La dedup usa `<= 24 h`, así que una base exactamente 24 h después se cuenta como duplicado. Otra opción es reiniciar `streams-app` para limpiar los contadores.
 
 Captura las primeras líneas:
 
 ```text
-[all] key=val-1 value={"eventId":"val-1",...,"eventTime":1767866401000,...,"total":3980.0,...}
+[all] key=val-1 value={"eventId":"val-1",...,"eventTime":1768039201000,...,"total":3980.0,...}
 [all] key=bad-json-1 value={"eventId": "roto", "tiendaId":
 [all] key=dup-evento-1 value={"eventId":"dup-evento-1",...}
 ```
@@ -151,10 +151,10 @@ Ejecuta:
 Captura especialmente esta línea:
 
 ```text
-tienda-1|1767866400000 | {"tiendaId":"tienda-1","windowStart":1767866400000,"windowEnd":1767866460000,"ventas":3,"unidades":6,"montoTotal":4630.5,"ticketPromedio":1543.5,"actualizadoEn":"..."}
+tienda-1|1768039200000 | {"tiendaId":"tienda-1","windowStart":1768039200000,"windowEnd":1768039260000,"ventas":3,"unidades":6,"montoTotal":4630.5,"ticketPromedio":1543.5,"actualizadoEn":"..."}
 ```
 
-**Qué decir:** “Las tres ventas de `tienda-1` se agrupan en la ventana `[1767866400000, 1767866460000)`: `3980 + 350.5 + 300 = 4630.5` y el ticket promedio es `1543.5`. La salida aparece al cerrar la ventana gracias a `suppress`.”
+**Qué decir:** “Las tres ventas de `tienda-1` se agrupan en la ventana `[1768039200000, 1768039260000)`: `3980 + 350.5 + 300 = 4630.5` y el ticket promedio es `1543.5`. La salida aparece al cerrar la ventana gracias a `suppress`.”
 
 ---
 
@@ -302,3 +302,4 @@ Abre el dashboard **DSY1107 / Ventas** y captura los paneles de:
 | Todo aparece como duplicado | La base elegida está a ≤ 24 h de una anterior; usa una base ≥ 2 días posterior o reinicia la app |
 | `UNKNOWN_TOPIC_OR_PARTITION` | Ejecuta `.\scripts\topics.ps1` y espera a que `streams-app` muestre `RUNNING` |
 | Script bloqueado por PowerShell | `powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\...ps1"` |
+| Gráficos vacíos o target `ventas-streams` caído | Abre `http://localhost:9090/targets`; los 3 targets deben estar `UP`. Las etiquetas JMX se sanitizan en `MetricsServer` para que Prometheus las acepte |

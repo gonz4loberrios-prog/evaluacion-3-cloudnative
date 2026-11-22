@@ -322,6 +322,16 @@ ventas_agregadas_total 23
 
 > Los contadores `ventas_*` son instancias `Counter` en memoria del proceso. Al reiniciar `streams-app` para la prueba de restauración vuelven a 0; este comportamiento se documenta para no confundirlo con pérdida de estado. El estado **de negocio** sí se restaura desde los changelogs, como se vio en la sección 5.
 
+Verificación de targets en `http://localhost:9090/targets`:
+
+```text
+kafka-exporter  -> up
+prometheus      -> up
+ventas-streams  -> up
+```
+
+> Durante las pruebas se detectó que las métricas JMX de Kafka usan etiquetas con guiones (`client-id`), formato rechazado por Prometheus. `MetricsServer` las sanitiza a `client_id`, con lo que el target `ventas-streams` queda `UP` y los paneles muestran datos.
+
 Grupo y lag (extracto real de `inspect.ps1`):
 
 ```text
