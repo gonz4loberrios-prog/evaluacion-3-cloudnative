@@ -120,7 +120,7 @@ Muestra ISR de los tópicos, grupos de consumidores, lag del grupo `ventas-strea
 También puedes abrir:
 
 - Prometheus: <http://localhost:9090>
-- Grafana: <http://localhost:3000> (usuario `admin`, contraseña `admin` — solo demo, ver `.env.example`)
+- Grafana: <http://localhost:3000> (credenciales demo por defecto en `docker-compose.yml`; no se guardan en `.env.example`)
 - Métricas de la app: <http://localhost:18081/metrics> (el puerto interno del contenedor sigue siendo 8081; el host 8081 está ocupado por otro proyecto)
 
 ### 3.4 Generar eventos de prueba
@@ -182,7 +182,7 @@ Todas tienen valor por defecto y pueden sobreescribirse en `.env` (copiar `.env.
 | `STATE_DIR` | `/tmp/kafka-streams` | Directorio local de estado |
 | `METRICS_PORT` | `8081` | Puerto interno del endpoint `/metrics` |
 | `METRICS_HOST_PORT` | `18081` | Puerto expuesto en el host (8081 está ocupado por `despachos-api`) |
-| `GRAFANA_ADMIN_USER` / `GRAFANA_ADMIN_PASSWORD` | `admin` / `admin` | Credenciales demo de Grafana |
+| `GRAFANA_ADMIN_USER` / `GRAFANA_ADMIN_PASSWORD` | ver `docker-compose.yml` | Credenciales demo; deliberadamente ausentes en `.env.example` |
 
 ---
 

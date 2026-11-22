@@ -25,7 +25,7 @@ flowchart LR
 
     S --> TOP
     M --> A[(ventas-agregadas<br/>4 part. / RF=2)]
-    DLQ[(ventas-raw-dlq<br/>4 part. / RF=2)]
+    DLQ[(ventas-raw-dlq<br/>4 part. / RF=2<br/>clave = clave original)]
 
     TOP --> MET[/metrics<br/>contadores + JMX/]
     MET --> EX[kafka-exporter / Prometheus / Grafana]
@@ -34,6 +34,22 @@ flowchart LR
     Z --- K2[(kafka-2)]
     K1 --- K2
 ```
+
+### Tópicos, claves y replicación
+
+| Tópico | Clave | Particiones | RF | Creado por |
+|---|---|---:|---:|---|
+| `ventas-raw` | `eventId` | 4 | 2 | `scripts/topics.ps1` |
+| `ventas-agregadas` | `tiendaId\|windowStart` | 4 | 2 | `scripts/topics.ps1` |
+| `ventas-raw-dlq` | clave original del evento | 4 | 2 | `scripts/topics.ps1` |
+| `ventas-streams-dsy1107-por-tienda-repartition` | `tiendaId` | 4 | 2 | `scripts/topics.ps1` |
+| `ventas-streams-dsy1107-ventanas-store-repartition` | `tiendaId` | 4 | 2 | `scripts/topics.ps1` |
+| `ventas-streams-dsy1107-dedup-store-changelog` | `eventId` | 4 | 2 | `scripts/topics.ps1` |
+| `ventas-streams-dsy1107-eventtime-store-changelog` | `tiendaId` | 4 | 2 | `scripts/topics.ps1` |
+| `ventas-streams-dsy1107-ventanas-store-changelog` | `Windowed<tiendaId>` | 4 | 2 | `scripts/topics.ps1` |
+| `ventas-streams-dsy1107-KTABLE-SUPPRESS-STATE-STORE-…‑changelog` | ventana | 4 | 2 | Kafka Streams (Admin API) |
+
+Los tres tópicos de negocio y los cinco internos explícitos usan `min.insync.replicas=1` y `retention.ms=604800000`. `auto.create.topics.enable=false` evita tópicos accidentales con RF por defecto.
 
 ## 2. Flujo de datos
 

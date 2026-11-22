@@ -269,7 +269,7 @@ Abre:
 http://localhost:3000
 ```
 
-Credenciales demo: `admin` / `admin`.
+Credenciales demo: las definidas como defaults en `docker-compose.yml` (no están en `.env.example`).
 
 Abre el dashboard **DSY1107 / Ventas** y captura los paneles de:
 

@@ -70,3 +70,22 @@ La salida solo aparece al cerrar la ventana (gracias a `suppress`), por eso los 
 | `semanticaTemporal` | 7, 8 |
 
 Resultado registrado: `Tests run: 5, Failures: 0, Errors: 0, Skipped: 0` — `BUILD SUCCESS`.
+
+---
+
+## 7. Evidencia obtenida por escenario
+
+Cada fila de las tablas anteriores se verificó con los comandos de la sección "Para ejecutarlos en Docker". La evidencia real está en [`EVIDENCIA.md`](EVIDENCIA.md):
+
+| Escenarios | Evidencia obtenida |
+|---|---|
+| 1–5 (validación) | Salidas de `ventas-raw` y `ventas-raw-dlq` con `JSON_MALFORMADO`, `TOTAL_AUSENTE`, `TOTAL_NO_COINCIDE` y continuidad del flujo — §4 de `EVIDENCIA.md` |
+| 6 (duplicados) | DLQ `DUPLICADO / EVENTID_DUPLICADO` y un solo agregado para `tienda-4` — §4 de `EVIDENCIA.md` |
+| 7–8 (tiempo) | `late-ok-*` agregados; `late-bad-2` en DLQ como `TARDIO / LATE_BEYOND_GRACE` — §4 de `EVIDENCIA.md` |
+| 9–11 (agregación) | `ventas-agregadas` con `windowEnd`, `unidades`, `montoTotal` y `ticketPromedio` — §4 de `EVIDENCIA.md` |
+| 12 (caída de broker) | ISR `1,2 → 1 → 1,2`, `acks=all`, lag 0 y restauración desde changelogs — §5 de `EVIDENCIA.md` |
+| 13 (reinicio limpio) | Tópicos reaprovisionados con RF=2 e ISR `1,2` — §3 de `EVIDENCIA.md` |
+| 14 (observabilidad) | `/metrics` con contadores `ventas_*`, targets de Prometheus `UP` y paneles de Grafana — §6 de `EVIDENCIA.md` |
+| Automáticas | 5/5 pruebas, `BUILD SUCCESS` — §1 de `EVIDENCIA.md` |
+
+Para reproducir las capturas en orden, ver [`GUIA_PRESENTACION.md`](GUIA_PRESENTACION.md).

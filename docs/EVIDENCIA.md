@@ -358,5 +358,6 @@ Los descartes internos de ventanas cerradas se detectan en los logs con mensajes
 
 ## 7. Seguridad (ejecutado)
 
-- Solo existe `.env.example` con valores demo (`admin` / `admin`).
+- Solo existe `.env.example`, sin contraseñas, tokens ni datos personales.
+- Las credenciales demo de Grafana quedan únicamente como defaults de `docker-compose.yml`; **no** están en ningún archivo `.env` ni `.env.example`.
 - No se creó `.env` con secretos reales; `.gitignore` excluye `.env` y `.env.*` excepto `.env.example`.
