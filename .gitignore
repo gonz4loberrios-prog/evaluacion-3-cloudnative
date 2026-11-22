@@ -1,0 +1,11 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+*.log
+.DS_Store
+.idea/
+.vscode/
+.env
+.env.*
+!.env.example
+evidence/raw/
+state/

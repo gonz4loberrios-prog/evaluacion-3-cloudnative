@@ -1,0 +1,52 @@
+{
+  "id": null,
+  "uid": "ventas-dsy1107",
+  "title": "Streaming resiliente de ventas - DSY1107",
+  "tags": ["kafka", "streams", "dsy1107"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "refresh": "5s",
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "ISR por partición (ventas-raw) - esperado 2, degradado 1",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "targets": [
+        {"expr": "kafka_topic_partition_in_sync_replica{topic=\"ventas-raw\"}", "legendFormat": "p{{partition}}"}
+      ],
+      "fieldConfig": {"defaults": {"min": 0, "max": 2}, "overrides": []}
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Consumer lag por grupo y tópico",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "targets": [
+        {"expr": "sum by (consumergroup, topic) (kafka_consumergroup_lag)", "legendFormat": "{{consumergroup}} / {{topic}}"}
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Eventos válidos / inválidos / tardíos / duplicados",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "targets": [
+        {"expr": "ventas_validas_total", "legendFormat": "válidos"},
+        {"expr": "ventas_invalidas_total", "legendFormat": "inválidos"},
+        {"expr": "ventas_tardias_total", "legendFormat": "tardíos"},
+        {"expr": "ventas_duplicadas_total", "legendFormat": "duplicados"}
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Ventanas publicadas",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "targets": [
+        {"expr": "ventas_agregadas_total", "legendFormat": "agregados"}
+      ]
+    }
+  ],
+  "time": {"from": "now-15m", "to": "now"}
+}
