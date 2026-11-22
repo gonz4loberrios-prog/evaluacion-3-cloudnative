@@ -161,6 +161,8 @@ $env:JAVA_HOME = "C:\Program Files\Java\jdk-21"   # ajustar a tu JDK
 
 Resultado verificado: `Tests run: 5, Failures: 0, Errors: 0, Skipped: 0` — `BUILD SUCCESS`.
 
+Para preparar una demo o presentación con capturas reales, sigue [`docs/GUIA_PRESENTACION.md`](docs/GUIA_PRESENTACION.md).
+
 ---
 
 ## 4. Variables de configuración
@@ -241,5 +243,5 @@ docker compose up -d --build
 ├── src/test/java/.../VentasTopologyTest.java
 ├── scripts/                     # topics, inspect, generate, consume, failover (.ps1 y .sh)
 ├── monitoring/                  # Prometheus y Grafana
-└── docs/                        # ARQUITECTURA, DECISIONES, MATRIZ_ESCENARIOS, EVIDENCIA
+└── docs/                        # ARQUITECTURA, DECISIONES, MATRIZ_ESCENARIOS, EVIDENCIA, GUIA_PRESENTACION
 ```
