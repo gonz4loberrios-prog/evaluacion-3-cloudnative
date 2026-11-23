@@ -1,6 +1,6 @@
 # Guía de capturas para la presentación
 
-Esta guía te lleva paso a paso para sacar pantallazos reales del laboratorio. El estado actual del stack ya tiene datos generados con base `2026-01-10T10:00:00Z` (`1768039200000`) y métricas no cero.
+Esta guía te lleva paso a paso para sacar pantallazos reales del laboratorio. El stack está **actualmente levantado** (7/7 contenedores `Up`) con datos generados con base `2026-01-12T10:00:00Z` (`1768212000000`). Las métricas vigentes son `26 / 3 / 1 / 1 / 19` (válidos / inválidos / tardíos / duplicados / agregados) y el commit actual es `50204e0`.
 
 **Antes de empezar:** abre PowerShell en `C:\Users\gonza\OneDrive\Desktop\wwww` y maximiza la ventana. Usa el mismo orden de pasos; así las capturas cuentan una historia continua.
 
@@ -13,17 +13,34 @@ Esta guía te lleva paso a paso para sacar pantallazos reales del laboratorio. E
 
 | # | Captura | Comando / lugar | Qué resaltar |
 |---:|---|---|---|
-| 1 | Repo y commit | `git status` + `git log --oneline -1` | `main`, commit `40d0b90`, árbol limpio |
+| 0 | Stack activo | `docker compose ps` | 7 contenedores `Up` |
+| 1 | Repo y commit | `git status` + `git log --oneline -1` | `main`, commit `50204e0`, árbol limpio |
 | 2 | Arquitectura | `README.md` o `docs/ARQUITECTURA.md` | Flujo productor → Streams → salidas + DLQ |
 | 3 | Tópicos e ISR | `docker compose exec -T kafka-1 kafka-topics ... --describe` | 4 particiones, RF=2, `Isr: 1,2` |
-| 4 | Generación | `.\scripts\generate.ps1 -Scenario all -BaseTime 2026-01-10T10:00:00Z` | Entrada real con errores y duplicado |
-| 5 | Métricas | `http://localhost:18081/metrics` | `26 / 3 / 1 / 1 / 21` |
-| 6 | Agregados | `.\scripts\consume.ps1 -Topic ventas-agregadas` | `tienda-1` con `4630.5` y `1543.5` |
+| 4 | Generación | `.\scripts\generate.ps1 -Scenario all -BaseTime 2026-01-12T10:00:00Z` | Entrada real con errores y duplicado |
+| 5 | Métricas | `http://localhost:18081/metrics` | `26 / 3 / 1 / 1 / 19` |
+| 6 | Agregados | `.\scripts\consume.ps1 -Topic ventas-agregadas` | `tienda-1` con `4330.5` y `2165.25` |
 | 7 | DLQ | `.\scripts\consume.ps1 -Topic ventas-raw-dlq` | 5 categorías de rechazo |
 | 8 | Lag | `kafka-consumer-groups ... --describe --group ...` | `LAG = 0` en todas las particiones |
 | 9 | Failover | `docs/EVIDENCIA.md` §5 o ejecutar `failover.ps1` | ISR `1,2 → 1 → 1,2` |
 | 10 | Restauración | `docker compose logs ... streams-app` | `Restored and ready to run`, `Restoration took` |
-| 11 | Grafana | `http://localhost:3000` | Panel **DSY1107 / Ventas** |
+| 11 | Grafana | `http://localhost:3000` | Panel **Streaming resiliente de ventas - DSY1107** |
+
+**Nombres sugeridos para los archivos:** `00-stack.png`, `01-repo.png`, `02-arquitectura.png`, `03-topics-isr.png`, `04-generacion.png`, `05-metricas.png`, `06-agregados.png`, `07-dlq.png`, `08-lag.png`, `09-failover.png`, `10-restauracion.png`, `11-grafana.png`. Guárdalos en `docs/capturas/`.
+
+---
+
+## Paso 0 — Stack levantado
+
+Ejecuta:
+
+```powershell
+docker compose ps
+```
+
+Captura cuando veas los 7 servicios en `Up`: `dsy-zookeeper`, `dsy-kafka-1`, `dsy-kafka-2`, `dsy-streams-app`, `dsy-kafka-exporter`, `dsy-prometheus` y `dsy-grafana`.
+
+**Qué decir:** “El laboratorio completo está operativo: dos brokers con ZooKeeper, la aplicación Streams, el exportador y el stack de monitoreo.”
 
 ---
 
@@ -39,10 +56,10 @@ git log --oneline --decorate -1
 Captura cuando veas:
 
 ```text
-40d0b90 (HEAD -> main) Entrega inicial: streaming resiliente de ventas DSY1107 EP5
+50204e0 (HEAD -> main) Completar checklist: diagrama, evidencia por escenario y sanitizar .env.example
 ```
 
-**Qué decir:** “El entregable está versionado; un solo commit inicial, rama `main` y sin cambios pendientes.”
+**Qué decir:** “El entregable está versionado en la rama `main`, con el árbol de trabajo limpio y la evidencia documentada en el último commit.”
 
 ---
 
@@ -73,10 +90,10 @@ docker compose exec -T kafka-1 kafka-topics --bootstrap-server localhost:29092 -
 Captura las 4 líneas de partición. Deberías ver:
 
 ```text
-Topic: ventas-raw	PartitionCount: 4	ReplicationFactor: 2	Configs: min.insync.replicas=1,retention.ms=604800000
-	Topic: ventas-raw	Partition: 0	Leader: 2	Replicas: 2,1	Isr: 2,1
+Topic: ventas-raw	TopicId: DEb3fCUlRJCSURK26Mwy6g	PartitionCount: 4	ReplicationFactor: 2	Configs: min.insync.replicas=1,retention.ms=604800000
+	Topic: ventas-raw	Partition: 0	Leader: 2	Replicas: 2,1	Isr: 1,2
 	Topic: ventas-raw	Partition: 1	Leader: 1	Replicas: 1,2	Isr: 1,2
-	Topic: ventas-raw	Partition: 2	Leader: 2	Replicas: 2,1	Isr: 2,1
+	Topic: ventas-raw	Partition: 2	Leader: 2	Replicas: 2,1	Isr: 1,2
 	Topic: ventas-raw	Partition: 3	Leader: 1	Replicas: 1,2	Isr: 1,2
 ```
 
@@ -89,15 +106,15 @@ Topic: ventas-raw	PartitionCount: 4	ReplicationFactor: 2	Configs: min.insync.rep
 El estado actual ya tiene los datos. Si quieres ver la generación en vivo, ejecuta:
 
 ```powershell
-.\scripts\generate.ps1 -Scenario all -BaseTime 2026-01-10T10:00:00Z
+.\scripts\generate.ps1 -Scenario all -BaseTime 2026-01-12T10:00:00Z
 ```
 
-> **Importante:** si repites la generación, usa una base de tiempo **más de 24 h posterior** a la última usada (por ejemplo, `2026-01-12T10:00:00Z`). La dedup usa `<= 24 h`, así que una base exactamente 24 h después se cuenta como duplicado. Otra opción es reiniciar `streams-app` para limpiar los contadores.
+> **Importante:** si repites la generación, usa una base de tiempo **más de 24 h posterior** a la última usada (por ejemplo, `2026-01-14T10:00:00Z`). La dedup usa `<= 24 h`, así que una base exactamente 24 h después se cuenta como duplicado. Otra opción es reiniciar `streams-app` para limpiar los contadores.
 
 Captura las primeras líneas:
 
 ```text
-[all] key=val-1 value={"eventId":"val-1",...,"eventTime":1768039201000,...,"total":3980.0,...}
+[all] key=val-1 value={"eventId":"val-1",...,"eventTime":1768212001000,...,"total":3980.0,...}
 [all] key=bad-json-1 value={"eventId": "roto", "tiendaId":
 [all] key=dup-evento-1 value={"eventId":"dup-evento-1",...}
 ```
@@ -126,7 +143,7 @@ ventas_tardias_total 1
 # TYPE ventas_duplicadas_total counter
 ventas_duplicadas_total 1
 # TYPE ventas_agregadas_total counter
-ventas_agregadas_total 21
+ventas_agregadas_total 19
 ```
 
 Alternativa en PowerShell si prefieres capturar la terminal:
@@ -136,7 +153,7 @@ $txt = (Invoke-WebRequest -UseBasicParsing "http://localhost:18081/metrics").Con
 $txt | Where-Object { $_ -match "^ventas_" }
 ```
 
-**Qué decir:** “Los contadores de negocio confirman 26 válidos, 3 inválidos, 1 tardío, 1 duplicado y 21 agregados emitidos.”
+**Qué decir:** “Los contadores de negocio confirman 26 válidos, 3 inválidos, 1 tardío, 1 duplicado y 19 agregados emitidos. Los contadores se reinician al reiniciar `streams-app`; el estado de negocio se recupera de los changelogs.”
 
 ---
 
@@ -151,10 +168,10 @@ Ejecuta:
 Captura especialmente esta línea:
 
 ```text
-tienda-1|1768039200000 | {"tiendaId":"tienda-1","windowStart":1768039200000,"windowEnd":1768039260000,"ventas":3,"unidades":6,"montoTotal":4630.5,"ticketPromedio":1543.5,"actualizadoEn":"..."}
+tienda-1|1768212000000 | {"tiendaId":"tienda-1","windowStart":1768212000000,"windowEnd":1768212060000,"ventas":2,"unidades":3,"montoTotal":4330.5,"ticketPromedio":2165.25,"actualizadoEn":"..."}
 ```
 
-**Qué decir:** “Las tres ventas de `tienda-1` se agrupan en la ventana `[1768039200000, 1768039260000)`: `3980 + 350.5 + 300 = 4630.5` y el ticket promedio es `1543.5`. La salida aparece al cerrar la ventana gracias a `suppress`.”
+**Qué decir:** “Las ventas válidas de `tienda-1` se agrupan en la ventana `[1768212000000, 1768212060000)` y la salida aparece recién al cerrarse gracias a `suppress`: en esta ejecución quedaron 2 ventas, 3 unidades, `4330.5` y ticket promedio `2165.25`. El ejemplo clásico de 3 ventas / `4630.5` / `1543.5` corresponde a la ejecución con base `2026-01-10` y está en `docs/EVIDENCIA.md`.”
 
 ---
 
@@ -169,12 +186,14 @@ Ejecuta:
 Captura las líneas con estos motivos:
 
 ```text
-bad-json-1      → JSON_MALFORMADO        (INVALIDO)
-missing-total-1 → TOTAL_AUSENTE          (INVALIDO)
-bad-total-1     → TOTAL_NO_COINCIDE      (INVALIDO)
-dup-evento-1    → EVENTID_DUPLICADO      (DUPLICADO)
-late-bad-2      → LATE_BEYOND_GRACE      (TARDIO)
+bad-json-1      → JSON_MALFORMADO        (INVALIDO)      partición 1, offset 55
+missing-total-1 → TOTAL_AUSENTE          (INVALIDO)      partición 1, offset 56, eventTime 1768212012000
+bad-total-1     → TOTAL_NO_COINCIDE      (INVALIDO)      partición 1, offset 57, eventTime 1768212013000
+dup-evento-1    → EVENTID_DUPLICADO      (DUPLICADO)     partición 2, offset 60, eventTime 1768212020000
+late-bad-2      → LATE_BEYOND_GRACE      (TARDIO)        partición 3, offset 32, eventTime 1768212005000
 ```
+
+> La DLQ acumula ejecuciones anteriores. Para la captura, busca las líneas cuyo `eventTime` empiece con `1768212` (base `2026-01-12`) o usa `Ctrl+F` por `late-bad-2` y `dup-evento-1`.
 
 **Qué decir:** “La DLQ conserva tópico, partición, offset, clave y valor original. El tardío se clasifica `TARDIO`, nunca `INVALIDO`: su JSON es válido, lo que pasó es que su ventana ya cerró.”
 
@@ -192,10 +211,10 @@ Captura las filas de `ventas-raw`; todas deben terminar en `LAG 0`:
 
 ```text
 GROUP                  TOPIC       PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG
-ventas-streams-dsy1107 ventas-raw  0          26              26              0
-ventas-streams-dsy1107 ventas-raw  1          36              36              0
-ventas-streams-dsy1107 ventas-raw  2          40              40              0
-ventas-streams-dsy1107 ventas-raw  3          21              21              0
+ventas-streams-dsy1107 ventas-raw  0          44              44              0
+ventas-streams-dsy1107 ventas-raw  1          63              63              0
+ventas-streams-dsy1107 ventas-raw  2          67              67              0
+ventas-streams-dsy1107 ventas-raw  3          36              36              0
 ```
 
 **Qué decir:** “El grupo consume al mismo ritmo en que se publica; no hay retraso acumulado.”
@@ -233,7 +252,7 @@ Tarda aproximadamente 2 minutos. Captura:
 - Lag 0 durante y después.
 - Los mensajes de restauración (paso 10).
 
-> Si haces la opción B, los contadores vuelven a 0 porque el script reinicia `streams-app`. Eso está explicado en la evidencia; vuelve a generar con una base nueva si quieres repetir el paso 5.
+> Si haces la opción B, los contadores vuelven a 0 porque el script reinicia `streams-app`. Eso está explicado en la evidencia; vuelve a generar con una base nueva (por ejemplo `2026-01-14T10:00:00Z`) si quieres repetir el paso 5.
 
 ---
 
@@ -250,10 +269,10 @@ docker compose logs --since 10m streams-app 2>&1 |
 Captura líneas como:
 
 ```text
-Finished restoring changelog ventas-streams-dsy1107-dedup-store-changelog-3 ... 8 records
-Finished restoring changelog ... KTABLE-SUPPRESS-STATE-STORE-0000000031-changelog-2 ... 28 records
-task [2_2] Restored and ready to run
-Restoration took 1152 ms for all active tasks
+Finished restoring changelog ventas-streams-dsy1107-ventanas-store-changelog-2 to store ventanas-store with a total number of 45 records
+Finished restoring changelog ventas-streams-dsy1107-KTABLE-SUPPRESS-STATE-STORE-0000000031-changelog-2 ... with a total number of 78 records
+task [2_3] Restored and ready to run
+Restoration took 599 ms for all active tasks
 Estado Kafka Streams: REBALANCING -> RUNNING
 ```
 
@@ -271,7 +290,7 @@ http://localhost:3000
 
 Credenciales demo: las definidas como defaults en `docker-compose.yml` (no están en `.env.example`).
 
-Abre el dashboard **DSY1107 / Ventas** y captura los paneles de:
+Abre el dashboard **Streaming resiliente de ventas - DSY1107** (uid `ventas-dsy1107`) y captura los paneles de:
 
 - `kafka_topic_partition_in_sync_replica` (2 en estado sano).
 - `kafka_consumergroup_lag` (0).
