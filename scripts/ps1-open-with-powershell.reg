@@ -1,0 +1,18 @@
+Windows Registry Editor Version 5.00
+
+; Cambia la asociación de .ps1 de Windows Notepad a Windows PowerShell
+; para el usuario actual. No requiere administrador.
+; Importante: el command incluye -ExecutionPolicy Bypass para poder ejecutar
+; los scripts del laboratorio sin cambiar la política global.
+
+[-HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.ps1\UserChoice]
+[-HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.ps1\UserChoiceLatest]
+
+[HKEY_CURRENT_USER\Software\Classes\.ps1]
+@="Microsoft.PowerShellScript.1"
+
+[HKEY_CURRENT_USER\Software\Classes\Microsoft.PowerShellScript.1]
+@="Script de PowerShell"
+
+[HKEY_CURRENT_USER\Software\Classes\Microsoft.PowerShellScript.1\shell\open\command]
+@="\"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe\" -NoProfile -ExecutionPolicy Bypass -File \"%1\" %*"
