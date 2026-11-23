@@ -5,11 +5,11 @@ Ventana tumbling: 60 s ⇒ `WINDOW_MS=60000`. Gracia: 30 s ⇒ `GRACE_MS=30000`.
 
 Para ejecutarlos en Docker:
 
-```powershell
-.\scripts\generate.ps1 -Scenario <nombre>
-.\scripts\generate.ps1 -Scenario flush
-.\scripts\consume.ps1 -Topic ventas-agregadas
-.\scripts\consume.ps1 -Topic ventas-raw-dlq
+```cmd
+scripts\generate.bat -Scenario <nombre>
+scripts\generate.bat -Scenario flush
+scripts\consume.bat -Topic ventas-agregadas
+scripts\consume.bat -Topic ventas-raw-dlq
 ```
 
 ## 1. Escenarios de validación y DLQ
@@ -55,9 +55,9 @@ La salida solo aparece al cerrar la ventana (gracias a `suppress`), por eso los 
 
 | # | Escenario | Procedimiento | Resultado esperado |
 |---:|---|---|---|
-| 12 | Caída de broker | `.\scripts\failover.ps1` | ISR antes `[1,2]` → durante `[1]` → después `[1,2]`; se produce y consume durante la falla; lag vuelve a 0 y los stores se restauran |
-| 13 | Reinicio limpio | `docker compose down -v` → `up -d --build` → `topics.ps1` | Sin tópicos huérfanos; configuración de RF/retención reaplicada |
-| 14 | Observabilidad | `.\scripts\inspect.ps1`, Grafana | `/metrics` con contadores > 0; paneles de ISR y lag sin errores |
+| 12 | Caída de broker | `scripts\failover.bat` | ISR antes `[1,2]` → durante `[1]` → después `[1,2]`; se produce y consume durante la falla; lag vuelve a 0 y los stores se restauran |
+| 13 | Reinicio limpio | `docker compose down -v` → `up -d --build` → `scripts\topics.bat` | Sin tópicos huérfanos; configuración de RF/retención reaplicada |
+| 14 | Observabilidad | `scripts\inspect.bat`, Grafana | `/metrics` con contadores > 0; paneles de ISR y lag sin errores |
 
 ## 6. Cobertura de pruebas automáticas
 

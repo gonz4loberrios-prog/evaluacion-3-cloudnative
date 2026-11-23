@@ -2,8 +2,7 @@
 
 Este documento registra la evidencia **real** obtenida en este entorno (Windows + Docker Desktop). Todas las salidas mostradas provienen de ejecutar los scripts incluidos; no son ejemplos hipotéticos.
 
-> En PowerShell, si la política de ejecución bloquea los scripts, usar:
-> `powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\<script>.ps1"`.
+> Los comandos están en **CMD**. Los scripts `.ps1` se invocan con los wrappers `.bat` de `scripts\`, que ya incluyen `-ExecutionPolicy Bypass`. Desde PowerShell, el equivalente es `powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\<script>.ps1"`.
 
 ---
 
@@ -11,8 +10,8 @@ Este documento registra la evidencia **real** obtenida en este entorno (Windows 
 
 Comando:
 
-```powershell
-$env:JAVA_HOME = "C:\Program Files\Java\jdk-21"
+```cmd
+set "JAVA_HOME=C:\Program Files\Java\jdk-21"
 .\mvnw.cmd -B test
 ```
 
@@ -66,8 +65,8 @@ dsy-zookeeper        Up 4 minutes
 
 Comandos:
 
-```powershell
-.\scripts\topics.ps1
+```cmd
+scripts\topics.bat
 docker compose exec -T kafka-1 kafka-topics --bootstrap-server localhost:29092 --describe
 ```
 
@@ -112,11 +111,11 @@ Verificación: 4 particiones por tópico, RF=2, ISR con ambos brokers en estado 
 
 Comandos:
 
-```powershell
-.\scripts\generate.ps1 -Scenario all
-.\scripts\generate.ps1 -Scenario flush
-.\scripts\consume.ps1 -Topic ventas-agregadas
-.\scripts\consume.ps1 -Topic ventas-raw-dlq
+```cmd
+scripts\generate.bat -Scenario all
+scripts\generate.bat -Scenario flush
+scripts\consume.bat -Topic ventas-agregadas
+scripts\consume.bat -Topic ventas-raw-dlq
 ```
 
 Base de tiempo: `2026-01-01T10:00:00Z` ⇒ `1767261600000` ms.
@@ -172,8 +171,8 @@ El tardío aparece como `TARDIO`, no como `INVALIDO`, y su JSON de entrada es v�
 
 Comando:
 
-```powershell
-.\scripts\failover.ps1
+```cmd
+scripts\failover.bat
 ```
 
 El script usó `--base-time 2026-01-03T10:00:00Z` (`1767434400000`) para no colisionar con la dedup de 24 h del escenario `all`.
@@ -300,9 +299,9 @@ Criterios de aceptación verificados:
 
 Comandos:
 
-```powershell
-.\scripts\inspect.ps1
-Invoke-WebRequest -UseBasicParsing "http://localhost:18081/metrics"
+```cmd
+scripts\inspect.bat
+curl.exe -s http://localhost:18081/metrics | findstr /B "ventas_"
 ```
 
 Salida real del endpoint **antes del reinicio de `streams-app`** (dentro de `failover.ps1`):

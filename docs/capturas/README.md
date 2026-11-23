@@ -1,6 +1,6 @@
 # Capturas para el informe
 
-Guarda aquí los pantallazos siguiendo el orden de [`../GUIA_PRESENTACION.md`](../GUIA_PRESENTACION.md). Al final de esa guía hay un anexo con los mismos comandos para `cmd.exe`.
+Guarda aquí los pantallazos siguiendo el orden de [`../GUIA_PRESENTACION.md`](../GUIA_PRESENTACION.md). Toda la guía está escrita para `cmd.exe`.
 
 | Archivo | Contenido |
 |---|---|
@@ -8,7 +8,7 @@ Guarda aquí los pantallazos siguiendo el orden de [`../GUIA_PRESENTACION.md`](.
 | `01-repo.png` | `git status` + `git log --oneline -1` (`HEAD -> main`, árbol limpio) |
 | `02-arquitectura.png` | Diagrama del flujo en `README.md` o `docs/ARQUITECTURA.md` |
 | `03-topics-isr.png` | `kafka-topics --describe` con 4 particiones, RF=2, `Isr: 1,2` |
-| `04-generacion.png` | Salida de `generate.ps1 -Scenario all -BaseTime 2026-01-12T10:00:00Z` |
+| `04-generacion.png` | Salida de `scripts\generate.bat -Scenario all -BaseTime 2026-01-14T10:00:00Z` |
 | `05-metricas.png` | `http://localhost:18081/metrics` (`26/3/1/1/19`) |
 | `06-agregados.png` | `ventas-agregadas`, ventana `1768212000000` |
 | `07-dlq.png` | `ventas-raw-dlq` con las 5 categorías de rechazo |

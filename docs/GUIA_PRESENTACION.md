@@ -1,11 +1,15 @@
-# Guía de capturas para la presentación
+# Guía de capturas para la presentación (CMD)
 
-Esta guía te lleva paso a paso para sacar pantallazos reales del laboratorio. El stack está **actualmente levantado** (7/7 contenedores `Up`) con datos generados con base `2026-01-12T10:00:00Z` (`1768212000000`). Las métricas vigentes son `26 / 3 / 1 / 1 / 19` (válidos / inválidos / tardíos / duplicados / agregados). El hash del commit se toma directamente del paso 1 (cambia cada vez que se actualiza la documentación).
+Esta guía te lleva paso a paso para sacar pantallazos reales del laboratorio **usando solo `cmd.exe`**. El stack está actualmente levantado (7/7 contenedores `Up`) con datos generados con base `2026-01-12T10:00:00Z` (`1768212000000`). Las métricas vigentes son `26 / 3 / 1 / 1 / 19` (válidos / inválidos / tardíos / duplicados / agregados).
 
-**Antes de empezar:** abre PowerShell en `C:\Users\gonza\OneDrive\Desktop\wwww` y maximiza la ventana. Usa el mismo orden de pasos; así las capturas cuentan una historia continua.
+**Antes de empezar:** abre CMD en `C:\Users\gonza\OneDrive\Desktop\wwww`, maximízalo y ejecuta:
 
-> Si PowerShell bloquea los scripts, ejecuta:
-> `powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\<script>.ps1"`.
+```cmd
+cd /d C:\Users\gonza\OneDrive\Desktop\wwww
+chcp 65001 >nul
+```
+
+`chcp 65001` es para que se vean bien los acentos (`idéntica`, `tardío`). Los scripts `.ps1` se llaman a través de los wrappers `.bat` de `scripts\`; **no escribas `consume.ps1` directamente en CMD**, porque Windows te mostraría el código en Notepad.
 
 ---
 
@@ -15,26 +19,24 @@ Esta guía te lleva paso a paso para sacar pantallazos reales del laboratorio. E
 |---:|---|---|---|
 | 0 | Stack activo | `docker compose ps` | 7 contenedores `Up` |
 | 1 | Repo y commit | `git status` + `git log --oneline -1` | `main`, `HEAD -> main`, árbol limpio |
-| 2 | Arquitectura | `README.md` o `docs/ARQUITECTURA.md` | Flujo productor → Streams → salidas + DLQ |
+| 2 | Arquitectura | `notepad README.md` o `docs\ARQUITECTURA.md` | Flujo productor → Streams → salidas + DLQ |
 | 3 | Tópicos e ISR | `docker compose exec -T kafka-1 kafka-topics ... --describe` | 4 particiones, RF=2, `Isr: 1,2` |
-| 4 | Generación | `.\scripts\generate.ps1 -Scenario all -BaseTime 2026-01-12T10:00:00Z` | Entrada real con errores y duplicado |
-| 5 | Métricas | `http://localhost:18081/metrics` | `26 / 3 / 1 / 1 / 19` |
-| 6 | Agregados | `.\scripts\consume.ps1 -Topic ventas-agregadas` | `tienda-1` con `4330.5` y `2165.25` |
-| 7 | DLQ | `.\scripts\consume.ps1 -Topic ventas-raw-dlq` | 5 categorías de rechazo |
+| 4 | Generación | `scripts\generate.bat -Scenario all -BaseTime 2026-01-14T10:00:00Z` | Entrada real con errores y duplicado |
+| 5 | Métricas | `curl.exe -s http://localhost:18081/metrics \| findstr /B "ventas_"` | `26 / 3 / 1 / 1 / 19` |
+| 6 | Agregados | `scripts\consume.bat -Topic ventas-agregadas` | `tienda-1` con `4330.5` y `2165.25` |
+| 7 | DLQ | `scripts\consume.bat -Topic ventas-raw-dlq` | 5 categorías de rechazo |
 | 8 | Lag | `kafka-consumer-groups ... --describe --group ...` | `LAG = 0` en todas las particiones |
-| 9 | Failover | `docs/EVIDENCIA.md` §5 o ejecutar `failover.ps1` | ISR `1,2 → 1 → 1,2` |
-| 10 | Restauración | `docker compose logs ... streams-app` | `Restored and ready to run`, `Restoration took` |
-| 11 | Grafana | `http://localhost:3000` | Panel **Streaming resiliente de ventas - DSY1107** |
+| 9 | Failover | `notepad docs\EVIDENCIA.md` o `scripts\failover.bat` | ISR `1,2 → 1 → 1,2` |
+| 10 | Restauración | `docker compose logs ... streams-app \| findstr` | `Restored and ready to run`, `Restoration took` |
+| 11 | Grafana | `start "" http://localhost:3000` | Dashboard **Streaming resiliente de ventas - DSY1107** |
 
-**Nombres sugeridos para los archivos:** `00-stack.png`, `01-repo.png`, `02-arquitectura.png`, `03-topics-isr.png`, `04-generacion.png`, `05-metricas.png`, `06-agregados.png`, `07-dlq.png`, `08-lag.png`, `09-failover.png`, `10-restauracion.png`, `11-grafana.png`. Guárdalos en `docs/capturas/`.
+**Nombres sugeridos:** `00-stack.png`, `01-repo.png`, `02-arquitectura.png`, `03-topics-isr.png`, `04-generacion.png`, `05-metricas.png`, `06-agregados.png`, `07-dlq.png`, `08-lag.png`, `09-failover.png`, `10-restauracion.png`, `11-grafana.png`. Guárdalos en `docs\capturas\`.
 
 ---
 
 ## Paso 0 — Stack levantado
 
-Ejecuta:
-
-```powershell
+```cmd
 docker compose ps
 ```
 
@@ -46,18 +48,12 @@ Captura cuando veas los 7 servicios en `Up`: `dsy-zookeeper`, `dsy-kafka-1`, `ds
 
 ## Paso 1 — Repo listo
 
-Ejecuta:
-
-```powershell
+```cmd
 git status
 git log --oneline --decorate -1
 ```
 
-Captura cuando veas `HEAD -> main` y que `git status` no muestra cambios pendientes. El mensaje del último commit debe ser `Actualizar guía de capturas al estado actual del stack` (o el que corresponda si se hicieron más ajustes después).
-
-```text
-<hash> (HEAD -> main) Actualizar guía de capturas al estado actual del stack
-```
+Captura cuando veas `HEAD -> main` y que `git status` no muestra cambios pendientes.
 
 **Qué decir:** “El entregable está versionado en la rama `main`, con el árbol de trabajo limpio y la evidencia documentada en el último commit.”
 
@@ -65,7 +61,11 @@ Captura cuando veas `HEAD -> main` y que `git status` no muestra cambios pendien
 
 ## Paso 2 — Arquitectura
 
-Abre `README.md` en el editor y captura el bloque:
+```cmd
+notepad README.md
+```
+
+Captura el bloque del flujo:
 
 ```text
 productor ──▶ ventas-raw ──▶ Kafka Streams ──▶ ventas-agregadas
@@ -73,7 +73,7 @@ productor ──▶ ventas-raw ──▶ Kafka Streams ──▶ ventas-agregada
                   │              └─▶ ventas-raw-dlq
 ```
 
-Si quieres más detalle, abre `docs/ARQUITECTURA.md` y captura el diagrama Mermaid.
+Si quieres más detalle: `notepad docs\ARQUITECTURA.md` y captura el diagrama Mermaid.
 
 **Qué decir:** “Un productor publica en `ventas-raw`; la topología valida, deduplica, repartiza por tienda, agrega en ventanas de 1 minuto con gracia de 30 s y `suppress`, y publica el resultado. Los rechazos van a DLQ sin detener el flujo.”
 
@@ -81,9 +81,7 @@ Si quieres más detalle, abre `docs/ARQUITECTURA.md` y captura el diagrama Merma
 
 ## Paso 3 — Tópicos e ISR
 
-Ejecuta:
-
-```powershell
+```cmd
 docker compose exec -T kafka-1 kafka-topics --bootstrap-server localhost:29092 --describe --topic ventas-raw
 ```
 
@@ -101,23 +99,23 @@ Topic: ventas-raw	TopicId: DEb3fCUlRJCSURK26Mwy6g	PartitionCount: 4	ReplicationF
 
 ---
 
-## Paso 4 — Generar eventos (si quieres repetirlo)
+## Paso 4 — Generar eventos (solo si quieres repetirlo)
 
-El estado actual ya tiene los datos. Si quieres ver la generación en vivo, ejecuta:
+Los datos de la ejecución actual ya están generados. Si quieres ver la generación en vivo, usa una base nueva de al menos 2 días posterior:
 
-```powershell
-.\scripts\generate.ps1 -Scenario all -BaseTime 2026-01-12T10:00:00Z
+```cmd
+scripts\generate.bat -Scenario all -BaseTime 2026-01-14T10:00:00Z
 ```
-
-> **Importante:** si repites la generación, usa una base de tiempo **más de 24 h posterior** a la última usada (por ejemplo, `2026-01-14T10:00:00Z`). La dedup usa `<= 24 h`, así que una base exactamente 24 h después se cuenta como duplicado. Otra opción es reiniciar `streams-app` para limpiar los contadores.
 
 Captura las primeras líneas:
 
 ```text
-[all] key=val-1 value={"eventId":"val-1",...,"eventTime":1768212001000,...,"total":3980.0,...}
+[all] key=val-1 value={"eventId":"val-1",...,"eventTime":1768384801000,...,"total":3980.0,...}
 [all] key=bad-json-1 value={"eventId": "roto", "tiendaId":
 [all] key=dup-evento-1 value={"eventId":"dup-evento-1",...}
 ```
+
+> La base ya usada es `2026-01-12`; repetirla haría que todo se conte como duplicado (dedup de 24 h). Si generás datos nuevos, las capturas 5 a 8 reflejarán los nuevos contadores y fechas.
 
 **Qué decir:** “El generador es reproducible y mezcla casos válidos, JSON roto, campos ausentes, total inconsistente, duplicados y tardíos.”
 
@@ -127,30 +125,24 @@ Captura las primeras líneas:
 
 Abre en el navegador:
 
-```text
-http://localhost:18081/metrics
+```cmd
+start "" http://localhost:18081/metrics
 ```
 
-Busca `Ctrl+F` por `ventas_` y captura:
+O captura la terminal:
+
+```cmd
+curl.exe -s http://localhost:18081/metrics | findstr /B "ventas_"
+```
+
+Debe salir:
 
 ```text
-# TYPE ventas_validas_total counter
 ventas_validas_total 26
-# TYPE ventas_invalidas_total counter
 ventas_invalidas_total 3
-# TYPE ventas_tardias_total counter
 ventas_tardias_total 1
-# TYPE ventas_duplicadas_total counter
 ventas_duplicadas_total 1
-# TYPE ventas_agregadas_total counter
 ventas_agregadas_total 19
-```
-
-Alternativa en PowerShell si prefieres capturar la terminal:
-
-```powershell
-$txt = (Invoke-WebRequest -UseBasicParsing "http://localhost:18081/metrics").Content -split "`n"
-$txt | Where-Object { $_ -match "^ventas_" }
 ```
 
 **Qué decir:** “Los contadores de negocio confirman 26 válidos, 3 inválidos, 1 tardío, 1 duplicado y 19 agregados emitidos. Los contadores se reinician al reiniciar `streams-app`; el estado de negocio se recupera de los changelogs.”
@@ -159,10 +151,8 @@ $txt | Where-Object { $_ -match "^ventas_" }
 
 ## Paso 6 — Salida agregada
 
-Ejecuta:
-
-```powershell
-.\scripts\consume.ps1 -Topic ventas-agregadas -MaxMessages 200
+```cmd
+scripts\consume.bat -Topic ventas-agregadas -MaxMessages 200 | findstr "1768212"
 ```
 
 Captura especialmente esta línea:
@@ -171,28 +161,17 @@ Captura especialmente esta línea:
 tienda-1|1768212000000 | {"tiendaId":"tienda-1","windowStart":1768212000000,"windowEnd":1768212060000,"ventas":2,"unidades":3,"montoTotal":4330.5,"ticketPromedio":2165.25,"actualizadoEn":"..."}
 ```
 
-**Qué decir:** “Las ventas válidas de `tienda-1` se agrupan en la ventana `[1768212000000, 1768212060000)` y la salida aparece recién al cerrarse gracias a `suppress`: en esta ejecución quedaron 2 ventas, 3 unidades, `4330.5` y ticket promedio `2165.25`. El ejemplo clásico de 3 ventas / `4630.5` / `1543.5` corresponde a la ejecución con base `2026-01-10` y está en `docs/EVIDENCIA.md`.”
+**Qué decir:** “Las ventas válidas de `tienda-1` se agrupan en la ventana `[1768212000000, 1768212060000)` y la salida aparece recién al cerrarse gracias a `suppress`: en esta ejecución quedaron 2 ventas, 3 unidades, `4330.5` y ticket promedio `2165.25`.”
 
 ---
 
 ## Paso 7 — DLQ
 
-**Desde CMD** (usa esta, es la que corresponde a tu terminal):
-
 ```cmd
-chcp 65001 >nul
 scripts\consume.bat -Topic ventas-raw-dlq -MaxMessages 200 | findstr /C:"2026-11-23T16:57"
 ```
 
-**Desde PowerShell:**
-
-```powershell
-.\scripts\consume.ps1 -Topic ventas-raw-dlq -MaxMessages 200 | Select-String "2026-11-23T16:57"
-```
-
-> Si escribís `.\scripts\consume.ps1` directamente en **CMD**, Windows abre el archivo con Notepad en vez de ejecutarlo. Por eso desde CMD se usa `scripts\consume.bat`.
-
-El bloque de abajo es un **resumen para verificar** la captura, **no** el texto literal que imprime Kafka (la salida real son líneas JSON largas como `late-bad-2 | {"categoria":"TARDIO",...}`):
+El bloque de abajo es un **resumen para verificar** la captura, no el texto literal (la salida real son líneas JSON largas como `late-bad-2 | {"categoria":"TARDIO",...}`):
 
 ```text
 bad-json-1      → JSON_MALFORMADO        (INVALIDO)      partición 1, offset 55
@@ -202,7 +181,11 @@ dup-evento-1    → EVENTID_DUPLICADO      (DUPLICADO)     partición 2, offset 
 late-bad-2      → LATE_BEYOND_GRACE      (TARDIO)        partición 3, offset 32, eventTime 1768212005000
 ```
 
-> El filtro por `2026-11-23T16:57` deja fuera las ejecuciones anteriores. Para una sola línea de ejemplo: `scripts\consume.bat -Topic ventas-raw-dlq -MaxMessages 200 | findstr "LATE_BEYOND_GRACE" | findstr "1768212005000"`.
+Para una sola línea de ejemplo:
+
+```cmd
+scripts\consume.bat -Topic ventas-raw-dlq -MaxMessages 200 | findstr "LATE_BEYOND_GRACE" | findstr "1768212005000"
+```
 
 **Qué decir:** “La DLQ conserva tópico, partición, offset, clave y valor original. El tardío se clasifica `TARDIO`, nunca `INVALIDO`: su JSON es válido, lo que pasó es que su ventana ya cerró.”
 
@@ -210,10 +193,8 @@ late-bad-2      → LATE_BEYOND_GRACE      (TARDIO)        partición 3, offset 
 
 ## Paso 8 — Lag
 
-Ejecuta:
-
-```powershell
-docker compose exec -T kafka-1 kafka-consumer-groups --bootstrap-server localhost:29092 --describe --group ventas-streams-dsy1107
+```cmd
+docker compose exec -T kafka-1 kafka-consumer-groups --bootstrap-server localhost:29092 --describe --group ventas-streams-dsy1107 | findstr "ventas-raw"
 ```
 
 Captura las filas de `ventas-raw`; todas deben terminar en `LAG 0`:
@@ -234,9 +215,13 @@ ventas-streams-dsy1107 ventas-raw  3          36              36              0
 
 Tienes dos opciones:
 
-### Opción A (recomendada para la presentación): capturar la evidencia ya guardada
+### Opción A (recomendada): capturar la evidencia ya guardada
 
-Abre `docs/EVIDENCIA.md`, sección **5. Caída de broker, ISR y lag**, y captura los tres bloques ISR:
+```cmd
+notepad docs\EVIDENCIA.md
+```
+
+Abre la sección **5. Caída de broker, ISR y lag** y captura los tres bloques:
 
 ```text
 ===== ISR ANTES =====      Isr: 2,1 / 1,2 / 2,1 / 1,2
@@ -248,10 +233,8 @@ Ventaja: no altera el estado actual.
 
 ### Opción B (demo en vivo)
 
-Ejecuta:
-
-```powershell
-.\scripts\failover.ps1
+```cmd
+scripts\failover.bat
 ```
 
 Tarda aproximadamente 2 minutos. Captura:
@@ -261,27 +244,15 @@ Tarda aproximadamente 2 minutos. Captura:
 - Lag 0 durante y después.
 - Los mensajes de restauración (paso 10).
 
-> Si haces la opción B, los contadores vuelven a 0 porque el script reinicia `streams-app`. Eso está explicado en la evidencia; vuelve a generar con una base nueva (por ejemplo `2026-01-14T10:00:00Z`) si quieres repetir el paso 5.
+> Si haces la opción B, los contadores vuelven a 0 porque el script reinicia `streams-app`; vuelve a generar con una base nueva si quieres repetir el paso 5.
 
 ---
 
 ## Paso 10 — Restauración desde changelogs
 
-**Desde CMD:**
-
 ```cmd
-docker compose logs --since 24h streams-app 2>&1 | findstr /C:"Restored and ready to run" /C:"Restoration took" /C:"Estado Kafka Streams"
+docker compose logs --since 24h streams-app 2>&1 | findstr /C:"Finished restoring changelog" /C:"Restored and ready to run" /C:"Restoration took" /C:"Estado Kafka Streams"
 ```
-
-**Desde PowerShell:**
-
-```powershell
-docker compose logs --since 24h streams-app 2>&1 |
-    Select-String -Pattern "Finished restoring changelog|Restored and ready to run|Restoration took|Estado Kafka Streams" |
-    Select-Object -Last 25
-```
-
-> Usá `--since 24h` (o quitá el `--since`) porque la restauración que se captura ocurrió hace más de 10 minutos. Si recién ejecutaste `failover.ps1`, alcanza con `--since 10m`.
 
 Captura líneas como:
 
@@ -293,80 +264,24 @@ Restoration took 599 ms for all active tasks
 Estado Kafka Streams: REBALANCING -> RUNNING
 ```
 
+> Usá `--since 24h` (o quitá el `--since`) porque la restauración que se captura ocurrió hace más de 10 minutos. Si recién ejecutaste `failover.bat`, alcanza con `--since 10m`.
+
 **Qué decir:** “Al reiniciar, Kafka Streams reconstruye `dedup-store`, `eventtime-store` y el store de `suppress` desde sus changelog topics; por eso no se pierde el estado de negocio.”
 
 ---
 
-## Paso 11 — Grafana
-
-Abre:
-
-```text
-http://localhost:3000
-```
-
-Credenciales demo: las definidas como defaults en `docker-compose.yml` (no están en `.env.example`).
-
-Abre el dashboard **Streaming resiliente de ventas - DSY1107** (uid `ventas-dsy1107`) y captura los paneles de:
-
-- `kafka_topic_partition_in_sync_replica` (2 en estado sano).
-- `kafka_consumergroup_lag` (0).
-- Contadores `ventas_*_total`.
-
-**Qué decir:** “Además del endpoint crudo, Prometheus y Grafana exponen la misma señal para monitoreo continuo.”
-
----
-
-## Anexo — Misma secuencia desde CMD (`cmd.exe`)
-
-Los scripts del repositorio son `.ps1`, pero se incluyó un wrapper `.bat` por cada uno en `scripts\` para poder invocarlos desde CMD sin escribir `powershell -File`. Si escribies `.\scripts\consume.ps1` directamente en CMD, Windows **mostraría el código del archivo** en vez de ejecutarlo; usa siempre `scripts\consume.bat` (o el comando `powershell -File` completo). El resto son comandos nativos de CMD (`findstr` en lugar de `Select-String`, `curl.exe` en lugar de `Invoke-WebRequest` y `start` para abrir el navegador).
+## Paso 11 — Grafana y Prometheus
 
 ```cmd
-cd /d C:\Users\gonza\OneDrive\Desktop\wwww
-
-docker compose ps
-
-git status
-git log --oneline --decorate -1
-
-docker compose exec -T kafka-1 kafka-topics --bootstrap-server localhost:29092 --describe --topic ventas-raw
-
-chcp 65001 >nul
-scripts\consume.bat -Topic ventas-agregadas -MaxMessages 200 | findstr "1768212"
-scripts\consume.bat -Topic ventas-raw-dlq -MaxMessages 200 | findstr /C:"2026-11-23T16:57"
-
-curl.exe -s http://localhost:18081/metrics | findstr /B "ventas_"
-
-docker compose exec -T kafka-1 kafka-consumer-groups --bootstrap-server localhost:29092 --describe --group ventas-streams-dsy1107 | findstr "ventas-raw"
-
 start "" http://localhost:9090/targets
 start "" http://localhost:3000
 ```
 
-Solo si necesitas regenerar datos (usa una base nueva de +2 días):
+Credenciales demo de Grafana: `admin` / `admin` (definidas como defaults en `docker-compose.yml`, no están en `.env.example`).
 
-```cmd
-scripts\generate.bat -Scenario all -BaseTime 2026-01-14T10:00:00Z
-```
+En Prometheus deben estar `UP` los 3 targets: `kafka-exporter`, `prometheus`, `ventas-streams`. En Grafana abre el dashboard **Streaming resiliente de ventas - DSY1107** (uid `ventas-dsy1107`) y captura los paneles de ISR (2), lag (0) y contadores `ventas_*_total`.
 
-Failover en vivo y logs de restauración:
-
-```cmd
-scripts\failover.bat
-
-docker compose logs --since 30m streams-app 2>&1 | findstr /C:"Restored and ready to run" /C:"Restoration took" /C:"Estado Kafka Streams"
-```
-
-Para abrir la evidencia del failover sin alterar el estado:
-
-```cmd
-notepad docs\EVIDENCIA.md
-```
-
-> `curl.exe` viene incluido en Windows 10/11. Si no está, abre `http://localhost:18081/metrics` directamente en el navegador y captura desde ahí.
-> El filtro por `2026-11-23T16:57` funciona porque los cinco rechazos de la ejecución actual se registraron en ese minuto; evita mezclar las ejecuciones del día 22. `chcp 65001 >nul` es solo para que CMD muestre bien `idéntica`, `válida` y `tardío` (el JSON en Kafka ya es UTF-8 correcto). Para una sola línea de ejemplo, encadena dos filtros: `scripts\consume.bat -Topic ventas-raw-dlq -MaxMessages 200 | findstr "LATE_BEYOND_GRACE" | findstr "1768212005000"`.
-
-**Si al escribir `consume.ps1` se abre Windows Notepad:** es la asociación de archivos del perfil, no un error del script. Para el pantallazo usa `scripts\consume.bat` y listo. Si quieres cambiar la asociación, haz doble clic en `scripts\ps1-open-with-powershell.reg` y confirma; eso deja `.ps1` apuntando a `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%1" %*`. También puedes hacerlo desde el Explorador: clic derecho en un `.ps1` → **Abrir con** → **Elegir otra aplicación** → **Windows PowerShell** → marcar **Usar siempre esta aplicación**. Después cierra y vuelve a abrir el Explorador (o reinicia sesión) para que se aplique.
+**Qué decir:** “Además del endpoint crudo, Prometheus y Grafana exponen la misma señal para monitoreo continuo.”
 
 ---
 
@@ -384,11 +299,13 @@ notepad docs\EVIDENCIA.md
 
 ## Si algo salió mal
 
-| Síntoma | Acción |
+| Síntoma | Acción en CMD |
 |---|---|
-| `consume.ps1` termina con timeout pero ya imprimió mensajes | Es normal: el timeout por inactividad se trata como fin correcto y sale con código 0 |
-| Métricas en 0 | Reinició `streams-app`; vuelve a generar con una base de tiempo nueva (`+2 días`) |
-| Todo aparece como duplicado | La base elegida está a ≤ 24 h de una anterior; usa una base ≥ 2 días posterior o reinicia la app |
-| `UNKNOWN_TOPIC_OR_PARTITION` | Ejecuta `.\scripts\topics.ps1` y espera a que `streams-app` muestre `RUNNING` |
-| Script bloqueado por PowerShell | `powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\...ps1"` |
-| Gráficos vacíos o target `ventas-streams` caído | Abre `http://localhost:9090/targets`; los 3 targets deben estar `UP`. Las etiquetas JMX se sanitizan en `MetricsServer` para que Prometheus las acepte |
+| Escribes `consume.ps1` y se abre Notepad | Usa `scripts\consume.bat`. Para cambiar la asociación, ejecuta `scripts\ps1-open-with-powershell.reg` |
+| `consume.bat` termina por timeout pero ya imprimió mensajes | Es normal: el timeout por inactividad se trata como fin correcto |
+| Métricas en 0 | Reinició `streams-app`; vuelve a generar con una base nueva (`+2 días`) |
+| Todo aparece como duplicado | La base elegida está a ≤ 24 h de una anterior; usa una base ≥ 2 días posterior |
+| `UNKNOWN_TOPIC_OR_PARTITION` | Ejecuta `scripts\topics.bat` y espera a que `streams-app` muestre `RUNNING` |
+| Acentos raros (`tard├¡o`) | Ejecuta `chcp 65001 >nul` en la misma ventana CMD |
+| Logs de restauración vacíos | Usa `--since 24h` o quita el `--since` |
+| Gráficos vacíos o target caído | Abre `http://localhost:9090/targets`; los 3 targets deben estar `UP` |

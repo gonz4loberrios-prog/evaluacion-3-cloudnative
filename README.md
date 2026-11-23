@@ -76,7 +76,7 @@ Categorías de la DLQ: `INVALIDO`, `DUPLICADO`, `TARDIO`. Ningún tardío se cla
 
 Comprobar Docker:
 
-```powershell
+```cmd
 docker info --format "{{.ServerVersion}}"
 ```
 
@@ -84,11 +84,11 @@ docker info --format "{{.ServerVersion}}"
 
 ## 3. Puesta en marcha (comandos exactos)
 
-Todo se ejecuta desde la raíz del repositorio.
+Todo se ejecuta desde la raíz del repositorio con **`cmd.exe`**. Los scripts `.ps1` se invocan mediante los wrappers `.bat` de `scripts\`; no escribas `consume.ps1` directamente en CMD (Windows lo abriría con Notepad). Si vienes de PowerShell, el equivalente es `powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\consume.ps1" ...`.
 
 ### 3.1 Levantar el stack
 
-```powershell
+```cmd
 docker compose up -d --build
 docker compose ps
 ```
@@ -97,10 +97,10 @@ Servicios levantados: `zookeeper`, `kafka-1`, `kafka-2`, `streams-app`, `kafka-e
 
 ### 3.2 Crear tópicos
 
-```powershell
-.\scripts\topics.ps1
-# o para recrearlos desde cero:
-.\scripts\topics.ps1 -Reset
+```cmd
+scripts\topics.bat
+rem o para recrearlos desde cero:
+scripts\topics.bat -Reset
 ```
 
 En Linux/macOS:
@@ -111,8 +111,8 @@ bash scripts/topics.sh
 
 ### 3.3 Verificar que la app está procesando
 
-```powershell
-.\scripts\inspect.ps1
+```cmd
+scripts\inspect.bat
 ```
 
 Muestra ISR de los tópicos, grupos de consumidores, lag del grupo `ventas-streams-dsy1107` y el endpoint `/metrics`.
@@ -125,37 +125,37 @@ También puedes abrir:
 
 ### 3.4 Generar eventos de prueba
 
-```powershell
-# Todos los escenarios de una vez
-.\scripts\generate.ps1 -Scenario all
+```cmd
+rem Todos los escenarios de una vez
+scripts\generate.bat -Scenario all
 
-# Un escenario específico
-.\scripts\generate.ps1 -Scenario invalid-json
-.\scripts\generate.ps1 -Scenario duplicate
-.\scripts\generate.ps1 -Scenario late-beyond-grace
+rem Un escenario específico
+scripts\generate.bat -Scenario invalid-json
+scripts\generate.bat -Scenario duplicate
+scripts\generate.bat -Scenario late-beyond-grace
 
-# Forzar cierre de ventanas y ver resultados
-.\scripts\generate.ps1 -Scenario flush
-.\scripts\consume.ps1 -Topic ventas-agregadas
-.\scripts\consume.ps1 -Topic ventas-raw-dlq
+rem Forzar cierre de ventanas y ver resultados
+scripts\generate.bat -Scenario flush
+scripts\consume.bat -Topic ventas-agregadas
+scripts\consume.bat -Topic ventas-raw-dlq
 ```
 
 Escenarios disponibles: `all`, `valid`, `invalid-json`, `missing-field`, `total-mismatch`, `invalid-cantidad`, `duplicate`, `late-within-grace`, `late-beyond-grace`, `flush`.
 
-`consume.ps1` usa `--timeout-ms 5000` para dejar de escuchar cuando no hay mensajes nuevos. Si ya imprimió registros, el timeout de inactividad se considera una finalización normal y el script termina con código 0.
+`consume.bat` (que llama a `consume.ps1`) usa `--timeout-ms 5000` para dejar de escuchar cuando no hay mensajes nuevos. Si ya imprimió registros, el timeout de inactividad se considera una finalización normal y el script termina con código 0.
 
 ### 3.5 Probar caída de un broker
 
-```powershell
-.\scripts\failover.ps1
+```cmd
+scripts\failover.bat
 ```
 
 El script captura ISR **antes**, **durante** (con `kafka-2` detenido) y **después** (tras reiniciarlo), produce eventos con `acks=all` durante la falla, muestra el lag y finalmente reinicia `streams-app` para demostrar la restauración desde changelogs. Detalles y resultados reales: [`docs/EVIDENCIA.md`](docs/EVIDENCIA.md).
 
 ### 3.6 Pruebas automáticas
 
-```powershell
-$env:JAVA_HOME = "C:\Program Files\Java\jdk-21"   # ajustar a tu JDK
+```cmd
+set "JAVA_HOME=C:\Program Files\Java\jdk-21"
 .\mvnw.cmd -B test
 ```
 
@@ -214,10 +214,10 @@ Matriz completa: [`docs/MATRIZ_ESCENARIOS.md`](docs/MATRIZ_ESCENARIOS.md).
 - **`exactly_once_v2`**: garantiza que un evento se procese una sola vez **en el motor** (transacciones + idempotencia). No evita que el **productor** envíe dos veces el mismo `eventId`: eso es duplicado de negocio y se resuelve con `dedup-store`. Son conceptos distintos.
 - **Reinicio limpio**: para repetir el laboratorio desde cero:
 
-```powershell
+```cmd
 docker compose down -v
 docker compose up -d --build
-.\scripts\topics.ps1
+scripts\topics.bat
 ```
 
 ---

@@ -17,7 +17,7 @@
 | Replication factor | 2 | Hay exactamente 2 brokers. **No se usa RF=3** porque no existe un tercer broker donde colocar la réplica. |
 | `min.insync.replicas` | 1 | Con `acks=all`, un productor necesita al menos 1 réplica en ISR. Si se pusiera 2, al caer un broker las escrituras fallarían con `NotEnoughReplicasException`, contradiciendo el requisito de "seguir produciendo y consumiendo durante la caída". Tradeoff: se pierde la garantía de que el dato esté en ambas réplicas antes de confirmar; al reiniciar el broker, la réplica se reconcilia. Se documenta explícitamente. |
 | Retención | 7 días (`604800000` ms) | Suficiente para repetir el laboratorio durante una semana sin perder los mensajes generados, sin crecer indefinidamente el disco. |
-| `auto.create.topics.enable` | `false` | Obliga a crear los tópicos con la configuración correcta mediante `scripts/topics.ps1`; evita tópicos accidentales con RF por defecto. |
+| `auto.create.topics.enable` | `false` | Obliga a crear los tópicos con la configuración correcta mediante `scripts\topics.bat`; evita tópicos accidentales con RF por defecto. |
 | Clave de `ventas-raw` | `eventId` | Todos los eventos con el mismo ID caen en la misma partición ⇒ dedup local sin `groupBy` extra. |
 | Clave de `ventas-agregadas` | `tiendaId\|windowStart` | Identifica de forma única cada ventana por tienda; facilita inspección y reprocesamiento. |
 | Clave de la DLQ | clave original | Conserva correlación con el mensaje de entrada. |
