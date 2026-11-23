@@ -267,13 +267,21 @@ Tarda aproximadamente 2 minutos. Captura:
 
 ## Paso 10 — Restauración desde changelogs
 
-Ejecuta:
+**Desde CMD:**
+
+```cmd
+docker compose logs --since 24h streams-app 2>&1 | findstr /C:"Restored and ready to run" /C:"Restoration took" /C:"Estado Kafka Streams"
+```
+
+**Desde PowerShell:**
 
 ```powershell
-docker compose logs --since 10m streams-app 2>&1 |
+docker compose logs --since 24h streams-app 2>&1 |
     Select-String -Pattern "Finished restoring changelog|Restored and ready to run|Restoration took|Estado Kafka Streams" |
     Select-Object -Last 25
 ```
+
+> Usá `--since 24h` (o quitá el `--since`) porque la restauración que se captura ocurrió hace más de 10 minutos. Si recién ejecutaste `failover.ps1`, alcanza con `--since 10m`.
 
 Captura líneas como:
 
