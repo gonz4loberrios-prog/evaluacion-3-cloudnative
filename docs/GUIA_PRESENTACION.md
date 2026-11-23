@@ -314,8 +314,9 @@ git log --oneline --decorate -1
 
 docker compose exec -T kafka-1 kafka-topics --bootstrap-server localhost:29092 --describe --topic ventas-raw
 
+chcp 65001 >nul
 scripts\consume.bat -Topic ventas-agregadas -MaxMessages 200 | findstr "1768212"
-scripts\consume.bat -Topic ventas-raw-dlq -MaxMessages 200 | findstr /C:"1768212" /C:"JSON_MALFORMADO" /C:"TOTAL_AUSENTE" /C:"TOTAL_NO_COINCIDE" /C:"EVENTID_DUPLICADO" /C:"LATE_BEYOND_GRACE"
+scripts\consume.bat -Topic ventas-raw-dlq -MaxMessages 200 | findstr /C:"2026-11-23T16:57"
 
 curl.exe -s http://localhost:18081/metrics | findstr /B "ventas_"
 
@@ -346,7 +347,7 @@ notepad docs\EVIDENCIA.md
 ```
 
 > `curl.exe` viene incluido en Windows 10/11. Si no está, abre `http://localhost:18081/metrics` directamente en el navegador y captura desde ahí.
-> Si `findstr` oculta el `bad-json-1` (no lleva `eventTime`), ejecuta el consumo DLQ sin filtro y usa `Ctrl+F` en la ventana de CMD.
+> El filtro por `2026-11-23T16:57` funciona porque los cinco rechazos de la ejecución actual se registraron en ese minuto; evita mezclar las ejecuciones del día 22. `chcp 65001 >nul` es solo para que CMD muestre bien `idéntica`, `válida` y `tardío` (el JSON en Kafka ya es UTF-8 correcto). Para una sola línea de ejemplo, encadena dos filtros: `scripts\consume.bat -Topic ventas-raw-dlq -MaxMessages 200 | findstr "LATE_BEYOND_GRACE" | findstr "1768212005000"`.
 
 **Si al escribir `consume.ps1` se abre Windows Notepad:** es la asociación de archivos del perfil, no un error del script. Para el pantallazo usa `scripts\consume.bat` y listo. Si quieres cambiar la asociación, haz doble clic en `scripts\ps1-open-with-powershell.reg` y confirma; eso deja `.ps1` apuntando a `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%1" %*`. También puedes hacerlo desde el Explorador: clic derecho en un `.ps1` → **Abrir con** → **Elegir otra aplicación** → **Windows PowerShell** → marcar **Usar siempre esta aplicación**. Después cierra y vuelve a abrir el Explorador (o reinicia sesión) para que se aplique.
 
