@@ -300,6 +300,56 @@ Abre el dashboard **Streaming resiliente de ventas - DSY1107** (uid `ventas-dsy1
 
 ---
 
+## Anexo — Misma secuencia desde CMD (`cmd.exe`)
+
+Los scripts del repositorio son `.ps1`, así que desde CMD se invocan con `powershell -NoProfile -ExecutionPolicy Bypass -File`. El resto son comandos nativos de CMD (`findstr` en lugar de `Select-String`, `curl.exe` en lugar de `Invoke-WebRequest` y `start` para abrir el navegador).
+
+```cmd
+cd /d C:\Users\gonza\OneDrive\Desktop\wwww
+
+docker compose ps
+
+git status
+git log --oneline --decorate -1
+
+docker compose exec -T kafka-1 kafka-topics --bootstrap-server localhost:29092 --describe --topic ventas-raw
+
+powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\consume.ps1" -Topic ventas-agregadas -MaxMessages 200 | findstr "1768212"
+powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\consume.ps1" -Topic ventas-raw-dlq -MaxMessages 200 | findstr /C:"1768212" /C:"JSON_MALFORMADO" /C:"TOTAL_AUSENTE" /C:"TOTAL_NO_COINCIDE" /C:"EVENTID_DUPLICADO" /C:"LATE_BEYOND_GRACE"
+
+curl.exe -s http://localhost:18081/metrics | findstr /B "ventas_"
+
+docker compose exec -T kafka-1 kafka-consumer-groups --bootstrap-server localhost:29092 --describe --group ventas-streams-dsy1107 | findstr "ventas-raw"
+
+start "" http://localhost:9090/targets
+start "" http://localhost:3000
+```
+
+Solo si necesitas regenerar datos (usa una base nueva de +2 días):
+
+```cmd
+powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\generate.ps1" -Scenario all -BaseTime 2026-01-14T10:00:00Z
+```
+
+Failover en vivo y logs de restauración:
+
+```cmd
+powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\failover.ps1"
+
+docker compose logs --since 30m streams-app 2>&1 | findstr /C:"Restored and ready to run" /C:"Restoration took" /C:"Estado Kafka Streams"
+```
+
+Para abrir la evidencia del failover sin alterar el estado:
+
+```cmd
+notepad docs\EVIDENCIA.md
+```
+
+> `curl.exe` viene incluido en Windows 10/11. Si no está, abre `http://localhost:18081/metrics` directamente en el navegador y captura desde ahí.
+> Si `findstr` oculta el `bad-json-1` (no lleva `eventTime`), ejecuta el consumo DLQ sin filtro y usa `Ctrl+F` en la ventana de CMD.
+
+---
+
 ## Guion sugerido (7 diapositivas)
 
 1. **Problema y arquitectura** — pasos 1 y 2.

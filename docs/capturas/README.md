@@ -1,6 +1,6 @@
 # Capturas para el informe
 
-Guarda aquí los pantallazos siguiendo el orden de [`../GUIA_PRESENTACION.md`](../GUIA_PRESENTACION.md).
+Guarda aquí los pantallazos siguiendo el orden de [`../GUIA_PRESENTACION.md`](../GUIA_PRESENTACION.md). Al final de esa guía hay un anexo con los mismos comandos para `cmd.exe`.
 
 | Archivo | Contenido |
 |---|---|
