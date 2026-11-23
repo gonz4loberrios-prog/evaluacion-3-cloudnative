@@ -302,7 +302,7 @@ Abre el dashboard **Streaming resiliente de ventas - DSY1107** (uid `ventas-dsy1
 
 ## Anexo — Misma secuencia desde CMD (`cmd.exe`)
 
-Los scripts del repositorio son `.ps1`, así que desde CMD se invocan con `powershell -NoProfile -ExecutionPolicy Bypass -File`. El resto son comandos nativos de CMD (`findstr` en lugar de `Select-String`, `curl.exe` en lugar de `Invoke-WebRequest` y `start` para abrir el navegador).
+Los scripts del repositorio son `.ps1`, pero se incluyó un wrapper `.bat` por cada uno en `scripts\` para poder invocarlos desde CMD sin escribir `powershell -File`. Si escribies `.\scripts\consume.ps1` directamente en CMD, Windows **mostraría el código del archivo** en vez de ejecutarlo; usa siempre `scripts\consume.bat` (o el comando `powershell -File` completo). El resto son comandos nativos de CMD (`findstr` en lugar de `Select-String`, `curl.exe` en lugar de `Invoke-WebRequest` y `start` para abrir el navegador).
 
 ```cmd
 cd /d C:\Users\gonza\OneDrive\Desktop\wwww
@@ -314,8 +314,8 @@ git log --oneline --decorate -1
 
 docker compose exec -T kafka-1 kafka-topics --bootstrap-server localhost:29092 --describe --topic ventas-raw
 
-powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\consume.ps1" -Topic ventas-agregadas -MaxMessages 200 | findstr "1768212"
-powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\consume.ps1" -Topic ventas-raw-dlq -MaxMessages 200 | findstr /C:"1768212" /C:"JSON_MALFORMADO" /C:"TOTAL_AUSENTE" /C:"TOTAL_NO_COINCIDE" /C:"EVENTID_DUPLICADO" /C:"LATE_BEYOND_GRACE"
+scripts\consume.bat -Topic ventas-agregadas -MaxMessages 200 | findstr "1768212"
+scripts\consume.bat -Topic ventas-raw-dlq -MaxMessages 200 | findstr /C:"1768212" /C:"JSON_MALFORMADO" /C:"TOTAL_AUSENTE" /C:"TOTAL_NO_COINCIDE" /C:"EVENTID_DUPLICADO" /C:"LATE_BEYOND_GRACE"
 
 curl.exe -s http://localhost:18081/metrics | findstr /B "ventas_"
 
@@ -328,13 +328,13 @@ start "" http://localhost:3000
 Solo si necesitas regenerar datos (usa una base nueva de +2 días):
 
 ```cmd
-powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\generate.ps1" -Scenario all -BaseTime 2026-01-14T10:00:00Z
+scripts\generate.bat -Scenario all -BaseTime 2026-01-14T10:00:00Z
 ```
 
 Failover en vivo y logs de restauración:
 
 ```cmd
-powershell -NoProfile -ExecutionPolicy Bypass -File ".\scripts\failover.ps1"
+scripts\failover.bat
 
 docker compose logs --since 30m streams-app 2>&1 | findstr /C:"Restored and ready to run" /C:"Restoration took" /C:"Estado Kafka Streams"
 ```
