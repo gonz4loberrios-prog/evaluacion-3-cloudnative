@@ -177,13 +177,22 @@ tienda-1|1768212000000 | {"tiendaId":"tienda-1","windowStart":1768212000000,"win
 
 ## Paso 7 — DLQ
 
-Ejecuta:
+**Desde CMD** (usa esta, es la que corresponde a tu terminal):
 
-```powershell
-.\scripts\consume.ps1 -Topic ventas-raw-dlq -MaxMessages 200
+```cmd
+chcp 65001 >nul
+scripts\consume.bat -Topic ventas-raw-dlq -MaxMessages 200 | findstr /C:"2026-11-23T16:57"
 ```
 
-Captura las líneas con estos motivos:
+**Desde PowerShell:**
+
+```powershell
+.\scripts\consume.ps1 -Topic ventas-raw-dlq -MaxMessages 200 | Select-String "2026-11-23T16:57"
+```
+
+> Si escribís `.\scripts\consume.ps1` directamente en **CMD**, Windows abre el archivo con Notepad en vez de ejecutarlo. Por eso desde CMD se usa `scripts\consume.bat`.
+
+El bloque de abajo es un **resumen para verificar** la captura, **no** el texto literal que imprime Kafka (la salida real son líneas JSON largas como `late-bad-2 | {"categoria":"TARDIO",...}`):
 
 ```text
 bad-json-1      → JSON_MALFORMADO        (INVALIDO)      partición 1, offset 55
@@ -193,7 +202,7 @@ dup-evento-1    → EVENTID_DUPLICADO      (DUPLICADO)     partición 2, offset 
 late-bad-2      → LATE_BEYOND_GRACE      (TARDIO)        partición 3, offset 32, eventTime 1768212005000
 ```
 
-> La DLQ acumula ejecuciones anteriores. Para la captura, busca las líneas cuyo `eventTime` empiece con `1768212` (base `2026-01-12`) o usa `Ctrl+F` por `late-bad-2` y `dup-evento-1`.
+> El filtro por `2026-11-23T16:57` deja fuera las ejecuciones anteriores. Para una sola línea de ejemplo: `scripts\consume.bat -Topic ventas-raw-dlq -MaxMessages 200 | findstr "LATE_BEYOND_GRACE" | findstr "1768212005000"`.
 
 **Qué decir:** “La DLQ conserva tópico, partición, offset, clave y valor original. El tardío se clasifica `TARDIO`, nunca `INVALIDO`: su JSON es válido, lo que pasó es que su ventana ya cerró.”
 
