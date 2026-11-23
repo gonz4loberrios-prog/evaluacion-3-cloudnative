@@ -5,7 +5,7 @@ Guarda aquí los pantallazos siguiendo el orden de [`../GUIA_PRESENTACION.md`](.
 | Archivo | Contenido |
 |---|---|
 | `00-stack.png` | `docker compose ps` con los 7 servicios `Up` |
-| `01-repo.png` | `git status` + `git log --oneline -1` (commit `50204e0`) |
+| `01-repo.png` | `git status` + `git log --oneline -1` (`HEAD -> main`, árbol limpio) |
 | `02-arquitectura.png` | Diagrama del flujo en `README.md` o `docs/ARQUITECTURA.md` |
 | `03-topics-isr.png` | `kafka-topics --describe` con 4 particiones, RF=2, `Isr: 1,2` |
 | `04-generacion.png` | Salida de `generate.ps1 -Scenario all -BaseTime 2026-01-12T10:00:00Z` |

@@ -1,6 +1,6 @@
 # Guía de capturas para la presentación
 
-Esta guía te lleva paso a paso para sacar pantallazos reales del laboratorio. El stack está **actualmente levantado** (7/7 contenedores `Up`) con datos generados con base `2026-01-12T10:00:00Z` (`1768212000000`). Las métricas vigentes son `26 / 3 / 1 / 1 / 19` (válidos / inválidos / tardíos / duplicados / agregados) y el commit actual es `50204e0`.
+Esta guía te lleva paso a paso para sacar pantallazos reales del laboratorio. El stack está **actualmente levantado** (7/7 contenedores `Up`) con datos generados con base `2026-01-12T10:00:00Z` (`1768212000000`). Las métricas vigentes son `26 / 3 / 1 / 1 / 19` (válidos / inválidos / tardíos / duplicados / agregados). El hash del commit se toma directamente del paso 1 (cambia cada vez que se actualiza la documentación).
 
 **Antes de empezar:** abre PowerShell en `C:\Users\gonza\OneDrive\Desktop\wwww` y maximiza la ventana. Usa el mismo orden de pasos; así las capturas cuentan una historia continua.
 
@@ -14,7 +14,7 @@ Esta guía te lleva paso a paso para sacar pantallazos reales del laboratorio. E
 | # | Captura | Comando / lugar | Qué resaltar |
 |---:|---|---|---|
 | 0 | Stack activo | `docker compose ps` | 7 contenedores `Up` |
-| 1 | Repo y commit | `git status` + `git log --oneline -1` | `main`, commit `50204e0`, árbol limpio |
+| 1 | Repo y commit | `git status` + `git log --oneline -1` | `main`, `HEAD -> main`, árbol limpio |
 | 2 | Arquitectura | `README.md` o `docs/ARQUITECTURA.md` | Flujo productor → Streams → salidas + DLQ |
 | 3 | Tópicos e ISR | `docker compose exec -T kafka-1 kafka-topics ... --describe` | 4 particiones, RF=2, `Isr: 1,2` |
 | 4 | Generación | `.\scripts\generate.ps1 -Scenario all -BaseTime 2026-01-12T10:00:00Z` | Entrada real con errores y duplicado |
@@ -53,10 +53,10 @@ git status
 git log --oneline --decorate -1
 ```
 
-Captura cuando veas:
+Captura cuando veas `HEAD -> main` y que `git status` no muestra cambios pendientes. El mensaje del último commit debe ser `Actualizar guía de capturas al estado actual del stack` (o el que corresponda si se hicieron más ajustes después).
 
 ```text
-50204e0 (HEAD -> main) Completar checklist: diagrama, evidencia por escenario y sanitizar .env.example
+<hash> (HEAD -> main) Actualizar guía de capturas al estado actual del stack
 ```
 
 **Qué decir:** “El entregable está versionado en la rama `main`, con el árbol de trabajo limpio y la evidencia documentada en el último commit.”
