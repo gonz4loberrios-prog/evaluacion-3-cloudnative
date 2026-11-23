@@ -361,7 +361,7 @@ notepad docs\EVIDENCIA.md
 4. **Agregación por ventana y dedup** — pasos 5 y 6.
 5. **Resiliencia ante caída de broker** — pasos 8 y 9.
 6. **Recuperación de estado** — paso 10.
-7. **Observabilidad y cierre** — paso 11 + commit `40d0b90`.
+7. **Observabilidad y cierre** — paso 11 + estado limpio de `git status` y `git log -1`.
 
 ---
 
