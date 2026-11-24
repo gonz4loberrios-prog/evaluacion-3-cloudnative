@@ -11,6 +11,8 @@ chcp 65001 >nul
 
 `chcp 65001` es para que se vean bien los acentos (`idéntica`, `tardío`). Los scripts `.ps1` se llaman a través de los wrappers `.bat` de `scripts\`; **no escribas `consume.ps1` directamente en CMD**, porque Windows te mostraría el código en Notepad.
 
+**Atajo para el día de la presentación:** `scripts\presentar.bat` corre toda la verificación (stack, repo, tópicos, métricas, agregados, DLQ, lag y restauración) en una sola ventana.
+
 ---
 
 ## Resumen de capturas
